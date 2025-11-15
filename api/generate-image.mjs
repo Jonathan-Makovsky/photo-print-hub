@@ -2,7 +2,6 @@ import fetch from "node-fetch";
 
 export default async function handler(req, res) {
   try {
-    // Parse JSON body manually (Vercel doesn't auto-parse)
     const body = await new Promise((resolve) => {
       let data = "";
       req.on("data", (chunk) => (data += chunk));
@@ -15,20 +14,19 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "Missing prompt" });
     }
 
-    // Correct Fal.ai SDXL endpoint
+    // Google nano-banana model on Fal.ai
     const falResponse = await fetch(
-      "https://api.fal.ai/run/stable-diffusion-xl",
+      "https://fal.run/google/nano-banana/edit",
       {
         method: "POST",
         headers: {
           "Authorization": `Key ${process.env.FAL_KEY}`,
-          "Content-Type": "application/json"
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           prompt,
-          width: 1024,
-          height: 1024
-        })
+          size: "1024x1024",
+        }),
       }
     );
 
@@ -36,7 +34,10 @@ export default async function handler(req, res) {
 
     console.log("FAL RAW RESULT:", JSON.stringify(result, null, 2));
 
-    const imageUrl = result.images?.[0]?.url;
+    const imageUrl =
+      result.output?.images?.[0]?.url ||
+      result.images?.[0]?.url ||
+      null;
 
     return res.status(200).json({ imageUrl });
   } catch (err) {
