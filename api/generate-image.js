@@ -1,22 +1,44 @@
-import OpenAI from "openai";
+import fetch from "node-fetch";
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   try {
-    const { prompt } = req.body;
-
-    const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-
-    const result = await openai.images.generate({
-      model: "gpt-image-1",
-      prompt,
-      size: "1024x1024"
+    // Parse JSON body
+    const body = await new Promise((resolve) => {
+      let data = "";
+      req.on("data", (chunk) => (data += chunk));
+      req.on("end", () => resolve(JSON.parse(data)));
     });
 
-    const imageUrl = result.data[0].url;
+    const { prompt } = body;
+
+    if (!prompt) {
+      return res.status(400).json({ error: "Missing prompt" });
+    }
+
+    // Call Fal.ai SDXL model
+    const falResponse = await fetch(
+      "https://fal.run/model/stabilityai/stable-diffusion-xl",
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Key ${process.env.FAL_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          prompt,
+          width: 1024,
+          height: 1024,
+        }),
+      }
+    );
+
+    const result = await falResponse.json();
+
+    const imageUrl = result.output?.images?.[0]?.url;
 
     return res.status(200).json({ imageUrl });
-  } catch (e) {
-    console.error(e);
+  } catch (err) {
+    console.error("FAL ERROR:", err);
     return res.status(500).json({ error: "Generation failed" });
   }
-}
+};
