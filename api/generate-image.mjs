@@ -33,6 +33,8 @@ export default async function handler(req, res) {
     );
 
     const result = await falResponse.json();
+    console.log("FAL RAW RESULT:", JSON.stringify(result, null, 2));
+
 
     const imageUrl = result.output?.images?.[0]?.url;
 
