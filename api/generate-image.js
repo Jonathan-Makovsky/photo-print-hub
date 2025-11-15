@@ -1,8 +1,8 @@
 import fetch from "node-fetch";
 
-module.exports = async function handler(req, res) {
+export default async function handler(req, res) {
   try {
-    // Parse JSON body
+    // Parse JSON body manually (Vercel doesn't auto-parse)
     const body = await new Promise((resolve) => {
       let data = "";
       req.on("data", (chunk) => (data += chunk));
@@ -15,7 +15,7 @@ module.exports = async function handler(req, res) {
       return res.status(400).json({ error: "Missing prompt" });
     }
 
-    // Call Fal.ai SDXL model
+    // Call Fal.ai SDXL
     const falResponse = await fetch(
       "https://fal.run/model/stabilityai/stable-diffusion-xl",
       {
@@ -41,4 +41,4 @@ module.exports = async function handler(req, res) {
     console.error("FAL ERROR:", err);
     return res.status(500).json({ error: "Generation failed" });
   }
-};
+}
