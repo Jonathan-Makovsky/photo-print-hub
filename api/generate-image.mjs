@@ -2,6 +2,7 @@ import fetch from "node-fetch";
 
 export default async function handler(req, res) {
   try {
+    // Parse JSON body manually (Vercel doesn't auto-parse)
     const body = await new Promise((resolve) => {
       let data = "";
       req.on("data", (chunk) => (data += chunk));
@@ -14,9 +15,9 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "Missing prompt" });
     }
 
-    // Google nano-banana model on Fal.ai
+    // BRIA FIBO model endpoint (correct)
     const falResponse = await fetch(
-      "https://fal.run/google/nano-banana/edit",
+      "https://fal.run/bria/fibo/generate",
       {
         method: "POST",
         headers: {
@@ -34,10 +35,8 @@ export default async function handler(req, res) {
 
     console.log("FAL RAW RESULT:", JSON.stringify(result, null, 2));
 
-    const imageUrl =
-      result.output?.images?.[0]?.url ||
-      result.images?.[0]?.url ||
-      null;
+    // BRIA returns result.output.images array
+    const imageUrl = result.output?.images?.[0]?.url;
 
     return res.status(200).json({ imageUrl });
   } catch (err) {
